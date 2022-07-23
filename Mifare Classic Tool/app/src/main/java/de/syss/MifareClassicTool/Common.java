@@ -18,6 +18,9 @@
 
 package de.syss.MifareClassicTool;
 
+import static de.syss.MifareClassicTool.Activities.Preferences.Preference.AutoCopyUID;
+import static de.syss.MifareClassicTool.Activities.Preferences.Preference.UIDFormat;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -58,7 +61,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -68,9 +70,6 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 
 import de.syss.MifareClassicTool.Activities.IActivityThatReactsToSave;
-
-import static de.syss.MifareClassicTool.Activities.Preferences.Preference.AutoCopyUID;
-import static de.syss.MifareClassicTool.Activities.Preferences.Preference.UIDFormat;
 
 
 /**
@@ -276,7 +275,7 @@ public class Common extends Application {
         if (file == null || !file.exists()) {
             return null;
         }
-        String[] ret = null;
+        String[] ret;
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(file));
@@ -307,8 +306,8 @@ public class Common extends Application {
      * @see #readLineByLine(BufferedReader, boolean, Context)
      */
     public static String[] readUriLineByLine(Uri uri, boolean readAll, Context context) {
-        InputStream contentStream = null;
-        String[] ret = null;
+        InputStream contentStream;
+        String[] ret;
         if (uri == null || context == null) {
             return null;
         }
@@ -337,7 +336,7 @@ public class Common extends Application {
      * an read error.
      */
     public static byte[] readUriRaw(Uri uri, Context context) {
-        InputStream contentStream = null;
+        InputStream contentStream;
         if (uri == null || context == null) {
             return null;
         }
@@ -373,7 +372,7 @@ public class Common extends Application {
      */
     private static String[] readLineByLine(BufferedReader reader,
             boolean readAll, Context context) {
-        String[] ret = null;
+        String[] ret;
         String line;
         ArrayList<String> linesArray = new ArrayList<>();
         try {
@@ -422,15 +421,14 @@ public class Common extends Application {
     public static String getFileName(Uri uri, Context context) {
         String result = null;
         if (uri.getScheme().equals("content")) {
-            Cursor cursor = context.getContentResolver().query(
-                    uri, null, null, null, null);
-            try {
+            try (Cursor cursor = context.getContentResolver().query(
+                uri, null, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
-                    result = cursor.getString(cursor.getColumnIndex(
-                            OpenableColumns.DISPLAY_NAME));
+                    int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (index >= 0) {
+                        result = cursor.getString(index);
+                    }
                 }
-            } finally {
-                cursor.close();
             }
         }
         if (result == null) {
@@ -579,7 +577,7 @@ public class Common extends Application {
         } else {
             error = true;
         }
-        return error == false;
+        return !error;
     }
 
     /**
@@ -607,7 +605,7 @@ public class Common extends Application {
      * @return True if file writing was successful. False otherwise.
      */
     public static boolean saveFile(Uri contentUri, byte[] bytes, Context context) {
-        OutputStream output = null;
+        OutputStream output;
         if (contentUri == null || bytes == null || context == null || bytes.length == 0) {
             return false;
         }
@@ -651,7 +649,7 @@ public class Common extends Application {
                     targetActivity.getClass()).addFlags(
                             Intent.FLAG_ACTIVITY_SINGLE_TOP);
             PendingIntent pendingIntent = PendingIntent.getActivity(
-                    targetActivity, 0, intent, 0);
+                    targetActivity, 0, intent, PendingIntent.FLAG_MUTABLE);
             try {
                 mNfcAdapter.enableForegroundDispatch(
                         targetActivity, pendingIntent, null, new String[][]{
@@ -888,7 +886,7 @@ public class Common extends Application {
             // Check if device does not support MIFARE Classic.
             // For doing so, check if the SAK of the tag indicate that
             // it's a MIFARE Classic tag.
-            // See: https://www.nxp.com/docs/en/application-note/AN10834.pdf (page 7)
+            // See: https://www.nxp.com/docs/en/application-note/AN10833.pdf (page 6)
             NfcA nfca = NfcA.get(tag);
             byte sak = (byte)nfca.getSak();
             if ((sak>>1 & 1) == 1) {
@@ -896,30 +894,18 @@ public class Common extends Application {
                 return -2;
             } else {
                 if ((sak>>3 & 1) == 1) { // SAK bit 4 = 1?
-                    if((sak>>4 & 1) == 1) { // SAK bit 5 = 1?
-                        // MIFARE Classic 2K
-                        // MIFARE Classic 4K
-                        // MIFARE SmartMX 4K
-                        // MIFARE Plus S 4K SL1
-                        // MIFARE Plus X 4K SL1
-                        // MIFARE Plus EV1 2K/4K SL1
-                        return -1;
-                    } else {
-                        if ((sak & 1) == 1) { // SAK bit 1 = 1?
-                            // MIFARE Mini
-                            return -1;
-                        } else {
-                            // MIFARE Classic 1k
-                            // MIFARE SmartMX 1k
-                            // MIFARE Plus S 2K SL1
-                            // MIFARE Plus X 2K SL1
-                            // MIFARE Plus SE 1K
-                            // MIFARE Plus EV1 2K/4K SL1
-                            return -1;
-                        }
-                    }
-                } else {
-                    // Some MIFARE tag, but not Classic or Classic compatible.
+                    // Note: Other SAK bits are irrelevant. Tag is MIFARE Classic compatible.
+                    // MIFARE Mini
+                    // MIFARE Classic 1K/2K/4K
+                    // MIFARE SmartMX 1K/4K
+                    // MIFARE Plus S 2K/4K SL1
+                    // MIFARE Plus X 2K/4K SL1
+                    // MIFARE Plus SE 1K
+                    // MIFARE Plus EV1 2K/4K SL1
+                    return -1;
+                } else { // SAK bit 4 = 0
+                    // Note: Other SAK bits are irrelevant. Tag is *not* MIFARE Classic compatible.
+                    // Tags like MIFARE Plus in SL2, MIFARE Ultralight, MIFARE DESFire, etc.
                     return -2;
                 }
             }
@@ -981,7 +967,6 @@ public class Common extends Application {
      * <li>-1 - Can not check because Android version is >= 8.</li>
      * </ul>
      */
-    @SuppressWarnings("deprecation")
     public static int isExternalNfcServiceRunning(Context context) {
         // getRunningServices() is deprecated since Android 8.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -1324,7 +1309,7 @@ public class Common extends Application {
      * @param hexString The string to check.
      * @param context The Context in which the Toast will be shown.
      * @return True if sting is hex an 16 Bytes long, False otherwise.
-     * @see #isHex(String, Context)  
+     * @see #isHex(String, Context)
      */
     public static boolean isHexAnd16Byte(String hexString, Context context) {
         boolean isHex = isHex(hexString, context);
@@ -1374,14 +1359,12 @@ public class Common extends Application {
             // For better reading (~ = invert operator):
             // if (b0=b8 and b0=~b4) and (b1=b9 and b9=~b5) ...
             // ... and (b12=b14 and b13=b15 and b12=~b13) then
-            if (    (b[0] == b[8] && (byte)(b[0]^0xFF) == b[4]) &&
-                    (b[1] == b[9] && (byte)(b[1]^0xFF) == b[5]) &&
-                    (b[2] == b[10] && (byte)(b[2]^0xFF) == b[6]) &&
-                    (b[3] == b[11] && (byte)(b[3]^0xFF) == b[7]) &&
-                    (b[12] == b[14] && b[13] == b[15] &&
-                    (byte)(b[12]^0xFF) == b[13])) {
-                return true;
-            }
+            return (b[0] == b[8] && (byte) (b[0] ^ 0xFF) == b[4]) &&
+                (b[1] == b[9] && (byte) (b[1] ^ 0xFF) == b[5]) &&
+                (b[2] == b[10] && (byte) (b[2] ^ 0xFF) == b[6]) &&
+                (b[3] == b[11] && (byte) (b[3] ^ 0xFF) == b[7]) &&
+                (b[12] == b[14] && b[13] == b[15] &&
+                    (byte) (b[12] ^ 0xFF) == b[13]);
         }
         return false;
     }
@@ -1633,7 +1616,7 @@ public class Common extends Application {
         // Byte3.
         if (valid && (uidLen == 7 || uidLen == 10)) {
             // The 3rd byte of a double/triple sized UID shall not be 0x88.
-            valid = !block0.substring(4, 6).equals("88");
+            valid = !block0.startsWith("88", 4);
         }
         // ATQA.
         // Check if there is a special ATQA tied to MIFARE SmartMX or TNP3xxx.
@@ -1812,7 +1795,7 @@ public class Common extends Application {
             return null;
         }
         byte[] bytes = hex2Bytes(hex);
-        String ret = null;
+        String ret;
         // Replace non printable ASCII with ".".
         for(int i = 0; i < bytes.length; i++) {
             if (bytes[i] < (byte)0x20 || bytes[i] == (byte)0x7F) {

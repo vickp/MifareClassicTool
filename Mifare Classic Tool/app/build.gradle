@@ -3,15 +3,14 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion '30.0.3'
+    compileSdk 31
 
     defaultConfig {
         applicationId "de.syss.MifareClassicTool"
-        minSdkVersion 19
-        targetSdkVersion 30
-        versionCode 60
-        versionName '4.0.2'
+        minSdk 19
+        targetSdk 31
+        versionCode 62
+        versionName '4.0.4'
     }
 
     buildTypes {
@@ -28,6 +27,6 @@ android {
 }
 
 dependencies {
-    implementation "androidx.core:core:1.5.0"
-    implementation "androidx.preference:preference:1.1.1"
+    implementation "androidx.core:core:1.7.0"
+    implementation "androidx.preference:preference:1.2.0"
 }

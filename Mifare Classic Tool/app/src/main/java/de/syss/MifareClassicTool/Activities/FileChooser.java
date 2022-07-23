@@ -332,19 +332,22 @@ public class FileChooser extends BasicActivity {
         View dialogLayout = getLayoutInflater().inflate(
                 R.layout.dialog_save_file,
                 findViewById(android.R.id.content), false);
-        TextView message = (TextView) dialogLayout.findViewById(
+        TextView message = dialogLayout.findViewById(
                 R.id.textViewDialogSaveFileMessage);
-        final EditText input = (EditText) dialogLayout.findViewById(
+        final EditText input = dialogLayout.findViewById(
                 R.id.editTextDialogSaveFileName);
         message.setText(R.string.dialog_new_file);
         input.setText(prefill);
         input.requestFocus();
         input.setSelection(0);
+
         // Show keyboard.
         InputMethodManager imm = (InputMethodManager) getSystemService(
                 Context.INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,
-                InputMethodManager.HIDE_IMPLICIT_ONLY);
+        input.postDelayed(() -> {
+            input.requestFocus();
+            imm.showSoftInput(input, 0);
+        }, 100);
 
         // Ask user for filename.
         new AlertDialog.Builder(this)

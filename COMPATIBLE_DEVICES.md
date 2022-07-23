@@ -1,7 +1,7 @@
 Compatible Devices
 ====================
 
-This is a list of Android devices which are complatible to MIFARE Classic Tool.
+This is a list of Android devices which are compatible to MIFARE Classic Tool.
 This app **has been known to work** on the following devices because their
 hardware (NFC-controller) does support MIFARE Classic
 ([read more](https://github.com/ikarus23/MifareClassicTool/issues/1)).
@@ -18,6 +18,7 @@ hardware (NFC-controller) does support MIFARE Classic
 * Google Pixel 3a
 * Google Pixel 3a XL
 * Google Pixel 4a
+* Google Pixel 5a
 * Honor 9
 * Honor 10
 * HTC One
@@ -33,6 +34,7 @@ hardware (NFC-controller) does support MIFARE Classic
 * LGE LG G4 (H815)
 * LGE LG G5
 * LGE LG G6 (H870)
+* Motorola One Vision
 * Motorola G5 Plus
 * Motorola Photon Q
 * Nokia 5
@@ -50,6 +52,7 @@ hardware (NFC-controller) does support MIFARE Classic
 * Samsung Galaxy A8 Plus
 * Samsung Galaxy A40 (SM-A405FN)
 * Samsung Galaxy A51
+* Samsung Galaxy J3 (2016) (Models: J320FN, J320F, J320P)
 * Samsung Galaxy J7 Pro (2017, Android 8.1)
 * Samsung Galaxy Nexus
 * Samsung Galaxy Note 2
@@ -74,6 +77,8 @@ hardware (NFC-controller) does support MIFARE Classic
 * Xiaomi Mi 9T
 * Xiaomi Mi 10T
 * Xiaomi Mi 10T Pro
+* Xiaomi Mi 11 Lite 5G NE
+* Xiaomi Redmi K20 Pro
 * Xiaomi Redmi K30 5G
 * Xiaomi Redmi Note 9 Pro
 * Yota Phone (YD201, YD206)
